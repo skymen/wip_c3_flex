@@ -27,15 +27,6 @@
 								"axes": "both",
 								"enabled": true
 							}
-						},
-						"Anchor": {
-							"properties": {
-								"left-edge": "window-left",
-								"top-edge": "window-top",
-								"right-edge": "window-right",
-								"bottom-edge": "window-bottom",
-								"enabled": false
-							}
 						}
 					},
 					"sceneGraphData": {
@@ -158,15 +149,6 @@
 						"DragDrop": {
 							"properties": {
 								"axes": "both",
-								"enabled": false
-							}
-						},
-						"Anchor": {
-							"properties": {
-								"left-edge": "window-left",
-								"top-edge": "window-top",
-								"right-edge": "window-right",
-								"bottom-edge": "window-bottom",
 								"enabled": false
 							}
 						}
@@ -463,15 +445,6 @@
 								"axes": "both",
 								"enabled": false
 							}
-						},
-						"Anchor": {
-							"properties": {
-								"left-edge": "window-left",
-								"top-edge": "window-top",
-								"right-edge": "window-right",
-								"bottom-edge": "window-bottom",
-								"enabled": false
-							}
 						}
 					},
 					"sceneGraphData": {
@@ -749,15 +722,6 @@
 						"DragDrop": {
 							"properties": {
 								"axes": "both",
-								"enabled": false
-							}
-						},
-						"Anchor": {
-							"properties": {
-								"left-edge": "window-left",
-								"top-edge": "window-top",
-								"right-edge": "window-right",
-								"bottom-edge": "window-bottom",
 								"enabled": false
 							}
 						}
@@ -1168,8 +1132,8 @@
 					"showing": true,
 					"locked": false,
 					"world": {
-						"x": 474,
-						"y": 70,
+						"x": 1196,
+						"y": 33,
 						"width": 306,
 						"height": 219,
 						"originX": 0,

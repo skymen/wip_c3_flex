@@ -256,6 +256,40 @@
 				}
 			],
 			"sid": 863259531580064
+		},
+		{
+			"eventType": "block",
+			"conditions": [
+				{
+					"id": "has-tags",
+					"objectClass": "Panel",
+					"sid": 834146199837903,
+					"parameters": {
+						"tags": "\"fullscreen\""
+					}
+				}
+			],
+			"actions": [
+				{
+					"id": "set-position",
+					"objectClass": "Panel",
+					"sid": 187517623250692,
+					"parameters": {
+						"x": "ViewportLeft(Self.LayerName)",
+						"y": "ViewportTop(Self.LayerName)"
+					}
+				},
+				{
+					"id": "set-size",
+					"objectClass": "Panel",
+					"sid": 432403581495083,
+					"parameters": {
+						"width": "ViewportWidth(Self.LayerName)",
+						"height": "ViewportHeight(Self.LayerName)"
+					}
+				}
+			],
+			"sid": 391882610652262
 		}
 	],
 	"sid": 724871636966836

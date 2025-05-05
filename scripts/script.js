@@ -73,22 +73,25 @@ export function createSimpleVerticalLayout(runtime, x, y, layer) {
 export function createHorizontalWithHeaderFooter(runtime, x, y, layer) {
   // Create main container
   const viewport = runtime.layout.getLayer(layer).getViewport();
-  //const container = runtime.objects.Panel.createInstance(layer, viewport.left,  viewport.top);
+  // const container = runtime.objects.Panel.createInstance(
+  //   layer,
+  //   viewport.left,
+  //   viewport.top
+  // );
   const container = runtime.objects.Panel.createInstance(layer, x, y);
   container.instVars.style = `
         display: vertical
         gap: 0
         padding: 0
         border: 2
-        fit-content: true
     `;
-  //container.width = viewport.width;
-  //container.height = viewport.height;
+  // container.width = viewport.width;
+  // container.height = viewport.height;
   container.instVars.classes = "";
-  container.setAllTags(new Set(["root"]));
+  container.setAllTags(new Set(["root", "fullscreen"]));
   container.colorRgb = [45 / 255, 45 / 255, 50 / 255]; // Very light gray
 
-  //container.behaviors.Anchor.isEnabled = true
+  // container.behaviors.Anchor.isEnabled = true;
 
   // Create header
   const header = runtime.objects.Panel.createInstance(layer, 0, 0);

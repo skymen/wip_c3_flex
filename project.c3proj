@@ -30,13 +30,6 @@
 		},
 		{
 			"type": "behavior",
-			"id": "Anchor",
-			"name": "Anchor",
-			"author": "Scirra",
-			"bundled": false
-		},
-		{
-			"type": "behavior",
 			"id": "DragnDrop",
 			"name": "Drag & Drop",
 			"author": "Scirra",

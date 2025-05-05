@@ -32,11 +32,6 @@
 			"behaviorId": "DragnDrop",
 			"name": "DragDrop",
 			"sid": 876095337669240
-		},
-		{
-			"behaviorId": "Anchor",
-			"name": "Anchor",
-			"sid": 625147543972039
 		}
 	],
 	"effectTypes": []
