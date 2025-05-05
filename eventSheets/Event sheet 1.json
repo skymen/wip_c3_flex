@@ -1,0 +1,262 @@
+{
+	"name": "Event sheet 1",
+	"events": [
+		{
+			"eventType": "block",
+			"conditions": [
+				{
+					"id": "on-start-of-layout",
+					"objectClass": "System",
+					"sid": 709758353845832
+				}
+			],
+			"actions": [
+				{
+					"id": "add-child",
+					"objectClass": "Panel",
+					"sid": 869354365702551,
+					"parameters": {
+						"child": "Panel",
+						"transform-x": true,
+						"transform-y": true,
+						"transform-w": true,
+						"transform-h": true,
+						"transform-a": true,
+						"transform-o": false,
+						"transform-z-elevation": true,
+						"transform-visibility": false,
+						"destroy-with-parent": false
+					}
+				}
+			],
+			"sid": 773400248756757
+		},
+		{
+			"eventType": "block",
+			"conditions": [
+				{
+					"id": "on-click",
+					"objectClass": "Mouse",
+					"sid": 420179518431139,
+					"parameters": {
+						"mouse-button": "right",
+						"click-type": "clicked"
+					}
+				}
+			],
+			"actions": [
+				{
+					"id": "create-object",
+					"objectClass": "System",
+					"sid": 557511353927614,
+					"parameters": {
+						"object-to-create": "Panel",
+						"layer": "0",
+						"x": "Mouse.X",
+						"y": "Mouse.Y",
+						"create-hierarchy": true,
+						"template-name": "\"test\""
+					}
+				}
+			],
+			"sid": 528657571971924
+		},
+		{
+			"eventType": "comment",
+			"text": "support 4 margins and 4 paddings\nrename spacing to gap\nchange from instvars to css style\nadd a way disable inclusion in layout"
+		},
+		{
+			"eventType": "block",
+			"conditions": [
+				{
+					"id": "on-object-clicked",
+					"objectClass": "Mouse",
+					"sid": 113645363020848,
+					"parameters": {
+						"mouse-button": "left",
+						"click-type": "clicked",
+						"object-clicked": "EmptyShell2"
+					}
+				}
+			],
+			"actions": [
+				{
+					"id": "set-visible",
+					"objectClass": "EmptyShell2",
+					"sid": 407772030627936,
+					"parameters": {
+						"visibility": "toggle"
+					}
+				}
+			],
+			"sid": 421697767082609,
+			"disabled": true
+		},
+		{
+			"eventType": "block",
+			"conditions": [
+				{
+					"id": "on-key-pressed",
+					"objectClass": "Keyboard",
+					"sid": 387022931491622,
+					"parameters": {
+						"key": 81
+					}
+				}
+			],
+			"actions": [
+				{
+					"type": "script",
+					"script": [
+						"createSimpleVerticalLayout(runtime, runtime.mouse.getMouseX(), runtime.mouse.getMouseY(), 0);",
+						"",
+						"//startLayoutDebug(\"root\")"
+					]
+				}
+			],
+			"sid": 902952122146552
+		},
+		{
+			"eventType": "block",
+			"conditions": [
+				{
+					"id": "on-key-pressed",
+					"objectClass": "Keyboard",
+					"sid": 624305513605768,
+					"parameters": {
+						"key": 87
+					}
+				}
+			],
+			"actions": [
+				{
+					"type": "script",
+					"script": [
+						"createHorizontalWithHeaderFooter(runtime, runtime.mouse.getMouseX(), runtime.mouse.getMouseY(), 0);",
+						"",
+						"//startLayoutDebug(\"root\")"
+					]
+				}
+			],
+			"sid": 155526523165402
+		},
+		{
+			"eventType": "block",
+			"conditions": [
+				{
+					"id": "on-key-pressed",
+					"objectClass": "Keyboard",
+					"sid": 804470829632621,
+					"parameters": {
+						"key": 69
+					}
+				}
+			],
+			"actions": [
+				{
+					"type": "script",
+					"script": [
+						"createGridDashboard(runtime, runtime.mouse.getMouseX(), runtime.mouse.getMouseY(), 0);",
+						"",
+						"//startLayoutDebug(\"root\")"
+					]
+				}
+			],
+			"sid": 250738542008419
+		},
+		{
+			"eventType": "block",
+			"conditions": [
+				{
+					"id": "on-key-pressed",
+					"objectClass": "Keyboard",
+					"sid": 659277863524238,
+					"parameters": {
+						"key": 84
+					}
+				}
+			],
+			"actions": [
+				{
+					"type": "script",
+					"script": [
+						"createMixedPositioningLayout(runtime, runtime.mouse.getMouseX(), runtime.mouse.getMouseY(), 0);",
+						"",
+						"//startLayoutDebug(\"root\")"
+					]
+				}
+			],
+			"sid": 164040481744317
+		},
+		{
+			"eventType": "block",
+			"conditions": [
+				{
+					"id": "on-key-pressed",
+					"objectClass": "Keyboard",
+					"sid": 184232054192889,
+					"parameters": {
+						"key": 89
+					}
+				}
+			],
+			"actions": [
+				{
+					"type": "script",
+					"script": [
+						"createComplexAppLayout(runtime, runtime.mouse.getMouseX(), runtime.mouse.getMouseY(), 0);",
+						"",
+						"//startLayoutDebug(\"root\")"
+					]
+				}
+			],
+			"sid": 895839239039913
+		},
+		{
+			"eventType": "block",
+			"conditions": [
+				{
+					"id": "on-key-pressed",
+					"objectClass": "Keyboard",
+					"sid": 371695682600864,
+					"parameters": {
+						"key": 85
+					}
+				}
+			],
+			"actions": [
+				{
+					"type": "script",
+					"script": [
+						"createFormLayout(runtime, runtime.mouse.getMouseX(), runtime.mouse.getMouseY(), 0);",
+						"",
+						"//startLayoutDebug(\"root\")"
+					]
+				}
+			],
+			"sid": 198920481609942
+		},
+		{
+			"eventType": "block",
+			"conditions": [
+				{
+					"id": "on-key-pressed",
+					"objectClass": "Keyboard",
+					"sid": 800102769074788,
+					"parameters": {
+						"key": 82
+					}
+				}
+			],
+			"actions": [
+				{
+					"id": "destroy",
+					"objectClass": "Panel",
+					"sid": 564802293010390
+				}
+			],
+			"sid": 863259531580064
+		}
+	],
+	"sid": 724871636966836
+}

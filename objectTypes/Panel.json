@@ -1,0 +1,43 @@
+{
+	"name": "Panel",
+	"plugin-id": "skymen_Shell",
+	"sid": 875400126024049,
+	"isGlobal": false,
+	"editorNewInstanceIsReplica": true,
+	"instanceVariables": [
+		{
+			"name": "classes",
+			"type": "string",
+			"desc": "",
+			"show": true,
+			"sid": 660606374995968
+		},
+		{
+			"name": "style",
+			"type": "string",
+			"desc": "",
+			"show": true,
+			"sid": 417161266472611
+		},
+		{
+			"name": "doLayout",
+			"type": "boolean",
+			"desc": "",
+			"show": true,
+			"sid": 767585644701983
+		}
+	],
+	"behaviorTypes": [
+		{
+			"behaviorId": "DragnDrop",
+			"name": "DragDrop",
+			"sid": 876095337669240
+		},
+		{
+			"behaviorId": "Anchor",
+			"name": "Anchor",
+			"sid": 625147543972039
+		}
+	],
+	"effectTypes": []
+}

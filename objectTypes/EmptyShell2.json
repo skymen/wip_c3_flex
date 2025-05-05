@@ -1,0 +1,38 @@
+{
+	"name": "EmptyShell2",
+	"plugin-id": "skymen_Shell",
+	"sid": 919007652134698,
+	"isGlobal": false,
+	"editorNewInstanceIsReplica": true,
+	"instanceVariables": [
+		{
+			"name": "classes",
+			"type": "string",
+			"desc": "",
+			"show": true,
+			"sid": 298215631836162
+		},
+		{
+			"name": "style",
+			"type": "string",
+			"desc": "",
+			"show": true,
+			"sid": 163927994544449
+		},
+		{
+			"name": "doLayout",
+			"type": "boolean",
+			"desc": "",
+			"show": true,
+			"sid": 981756841004999
+		}
+	],
+	"behaviorTypes": [
+		{
+			"behaviorId": "Sin",
+			"name": "Sine",
+			"sid": 665538790454557
+		}
+	],
+	"effectTypes": []
+}
