@@ -34,7 +34,7 @@ class UILayout {
     const importantProperties = [];
 
     // Split the input text by line breaks
-    const lines = cssText.split("\n");
+    const lines = cssText.split("\n").join(";").split(";");
 
     for (let line of lines) {
       // Remove any whitespace and optional semicolon

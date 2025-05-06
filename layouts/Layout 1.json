@@ -436,7 +436,7 @@
 					"tags": "",
 					"instanceVariables": {
 						"classes": "horizontal",
-						"style": "",
+						"style": "alignSelf: end",
 						"doLayout": true
 					},
 					"behaviors": {
@@ -715,7 +715,7 @@
 					"tags": "",
 					"instanceVariables": {
 						"classes": "horizontal",
-						"style": "",
+						"style": "alignSelf: start",
 						"doLayout": true
 					},
 					"behaviors": {
@@ -796,8 +796,8 @@
 					"showing": true,
 					"locked": false,
 					"world": {
-						"x": 24,
-						"y": 121,
+						"x": 33,
+						"y": 194,
 						"width": 306,
 						"height": 219,
 						"originX": 0,

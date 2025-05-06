@@ -279,7 +279,7 @@ export function createMixedPositioningLayout(runtime, x, y, layer) {
             width: 50
             height: 50
             position: absolute
-            ${pos.style.split(";").join("\n")}
+            ${pos.style}
             border: 1
         `;
     corner.instVars.classes = "";
