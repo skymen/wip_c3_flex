@@ -3,7 +3,8 @@
 	"plugin-id": "skymen_Shell",
 	"sid": 875400126024049,
 	"isGlobal": false,
-	"editorNewInstanceIsReplica": true,
+	"editorNewInstanceIsReplica": false,
+	"editorNewInstanceTemplateName": "default",
 	"instanceVariables": [
 		{
 			"name": "classes",

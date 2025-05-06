@@ -88,6 +88,7 @@ export function createHorizontalWithHeaderFooter(runtime, x, y, layer) {
   // container.width = viewport.width;
   // container.height = viewport.height;
   container.instVars.classes = "";
+  // container.setAllTags(new Set(["root"]));
   container.setAllTags(new Set(["root", "fullscreen"]));
   container.colorRgb = [45 / 255, 45 / 255, 50 / 255]; // Very light gray
 
@@ -99,7 +100,6 @@ export function createHorizontalWithHeaderFooter(runtime, x, y, layer) {
         height: 60
         width: 100%
         margin: 0
-        border-bottom-width: 1
     `;
   header.instVars.classes = "";
   header.behaviors.DragDrop.isEnabled = false;
@@ -112,9 +112,8 @@ export function createHorizontalWithHeaderFooter(runtime, x, y, layer) {
         display: horizontal
         gap: 10
         padding: 10
-        height: 280
         width: 100%
-        fit-content: true
+        flex: 1
     `;
   content.instVars.classes = "";
   content.behaviors.DragDrop.isEnabled = false;
@@ -124,9 +123,8 @@ export function createHorizontalWithHeaderFooter(runtime, x, y, layer) {
   // Add sidebar to content
   const sidebar = runtime.objects.Panel.createInstance(layer, 0, 0);
   sidebar.instVars.style = `
-        width: 120
+        flex: 1 2 120
         height: 100%
-        border-right-width: 1
     `;
   sidebar.instVars.classes = "";
   sidebar.behaviors.DragDrop.isEnabled = false;
@@ -136,7 +134,7 @@ export function createHorizontalWithHeaderFooter(runtime, x, y, layer) {
   // Add main area to content
   const mainArea = runtime.objects.Panel.createInstance(layer, 0, 0);
   mainArea.instVars.style = `
-        width: 330
+        flex: 2 1 330
         height: 100%
     `;
   mainArea.instVars.classes = "";
@@ -342,14 +340,11 @@ export function createComplexAppLayout(runtime, x, y, layer) {
         display: vertical
         gap: 0
         padding: 0
-        width: 0
-        height: 0
         align: center
         border: 2
-        fit-content: true
     `;
   app.instVars.classes = "";
-  app.setAllTags(new Set(["root"]));
+  app.setAllTags(new Set(["root", "fullscreen"]));
   app.colorRgb = [245 / 255, 245 / 255, 250 / 255]; // Very light gray
 
   // Create header with horizontal layout
@@ -385,9 +380,11 @@ export function createComplexAppLayout(runtime, x, y, layer) {
   menu.instVars.style = `
         display: horizontal
         gap: 10
-        width: 300
+        flex: 1
         height: 40
-        align-items: center
+        justifyContent: space-around
+        paddingLeft: 30
+        paddingRight: 30
     `;
   menu.instVars.classes = "";
   menu.behaviors.DragDrop.isEnabled = false;
@@ -413,7 +410,6 @@ export function createComplexAppLayout(runtime, x, y, layer) {
   profile.instVars.style = `
         width: 40
         height: 40
-        border-radius: 20
     `;
   profile.instVars.classes = "";
   profile.behaviors.DragDrop.isEnabled = false;
@@ -425,7 +421,8 @@ export function createComplexAppLayout(runtime, x, y, layer) {
   content.instVars.style = `
         display: horizontal
         gap: 0
-        fit-content: true
+        width: 100%
+        flex: 1
     `;
   content.instVars.classes = "";
   content.behaviors.DragDrop.isEnabled = false;
@@ -439,9 +436,10 @@ export function createComplexAppLayout(runtime, x, y, layer) {
         display: vertical
         gap: 10
         padding: 15
-        width: 200
+        minWidth: 100
+        flex: 0 1 200
+        height: 100%
         border-right-width: 1
-        fit-content: true
     `;
   sidebar.instVars.classes = "";
   sidebar.behaviors.DragDrop.isEnabled = false;
@@ -463,19 +461,35 @@ export function createComplexAppLayout(runtime, x, y, layer) {
   }
 
   // Create main content panel with grid layout
+  const mainContentContainer = runtime.objects.Panel.createInstance(
+    layer,
+    0,
+    0
+  );
+  mainContentContainer.instVars.style = `
+        display: horizontal
+        height: 100%
+        flex: 1
+        align-items: center
+        justify-content: center
+    `;
+  mainContentContainer.instVars.classes = "";
+  mainContentContainer.behaviors.DragDrop.isEnabled = false;
+  mainContentContainer.colorRgb = [52 / 255, 52 / 255, 55 / 255]; // Almost white
+  content.addChild(mainContentContainer, sceneOptions);
+
   const mainContent = runtime.objects.Panel.createInstance(layer, 0, 0);
   mainContent.instVars.style = `
         display: grid
         columns: 2
         gap: 20
         padding: 20
-        height: 100%
         fit-content: true
     `;
   mainContent.instVars.classes = "";
   mainContent.behaviors.DragDrop.isEnabled = false;
   mainContent.colorRgb = [52 / 255, 52 / 255, 55 / 255]; // Almost white
-  content.addChild(mainContent, sceneOptions);
+  mainContentContainer.addChild(mainContent, sceneOptions);
 
   // Create grid content items
   for (let i = 0; i < 4; i++) {
@@ -499,7 +513,12 @@ export function createComplexAppLayout(runtime, x, y, layer) {
   }
 
   // Create a modal dialog with absolute positioning
-  const modal = runtime.objects.Panel.createInstance(layer, 0, 0);
+  const viewport = runtime.layout.getLayer(layer).getViewport();
+  const modal = runtime.objects.Panel.createInstance(
+    layer,
+    viewport.left + viewport.width / 2 - 200,
+    viewport.top + viewport.height / 2 - 150
+  );
   modal.instVars.style = `
         display: vertical
         position: absolute

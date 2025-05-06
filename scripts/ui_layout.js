@@ -1,138 +1,7 @@
-// Simple UI Layout System for Construct 3 with Style Support
-// Assumes all instances are WorldInstance with hierarchy support
-
 /**
- * Parses CSS-like text into a style object
- *
- * Supports features:
- * - Property declarations line by line
- * - Optional semicolons
- * - Both camelCase and kebab-case properties (e.g., minWidth or min-width)
- * - Automatic conversion of numeric values
- * - Support for !important declarations
- *
- * @param {string} cssText - CSS-like text with properties
- * @returns {Object} Object containing computed style and important properties
+ * Enhanced UI Layout System for Construct 3 with Full Flex Support
+ * Implements flex-grow, flex-shrink, flex-basis, align-self, and justify-self
  */
-function parseStyle(cssText) {
-  if (!cssText) return { computedStyle: {}, importantProperties: [] };
-
-  const computedStyle = {};
-  const importantProperties = [];
-
-  // Split the input text by line breaks
-  const lines = cssText.split("\n");
-
-  for (let line of lines) {
-    // Remove any whitespace and optional semicolon
-    line = line.trim();
-    if (!line) continue;
-
-    if (line.endsWith(";")) {
-      line = line.slice(0, -1);
-    }
-
-    // Split by the first colon
-    const colonIndex = line.indexOf(":");
-    if (colonIndex === -1) continue;
-
-    const property = line.substring(0, colonIndex).trim();
-    let value = line.substring(colonIndex + 1).trim();
-
-    if (!property || !value) continue;
-
-    // Check for !important
-    const isImportant = value.includes("!important");
-    if (isImportant) {
-      value = value.replace(/\s*!important\s*$/, "").trim();
-      // Convert kebab-case to camelCase for the important list
-      importantProperties.push(kebabToCamel(property));
-    }
-
-    // Convert kebab-case to camelCase if needed
-    const camelProperty = kebabToCamel(property);
-
-    // Convert value if needed (handling numbers)
-    computedStyle[camelProperty] = convertValue(value);
-  }
-
-  return {
-    computedStyle,
-    importantProperties,
-  };
-}
-
-/**
- * Converts kebab-case to camelCase (e.g., min-width → minWidth)
- * @param {string} str - Property name to convert
- * @returns {string} camelCase property name
- */
-function kebabToCamel(str) {
-  return str.replace(/-([a-z])/g, (match, group) => group.toUpperCase());
-}
-
-/**
- * Converts string values to appropriate types
- * @param {string} value - Value to convert
- * @returns {string|number} Converted value
- */
-function convertValue(value) {
-  // If it's a pure number (no units), convert to number type
-  if (/^-?\d+(\.\d+)?$/.test(value)) {
-    return parseFloat(value);
-  }
-
-  // Special case for zero with units - just return 0
-  if (/^0(px|%|em|rem|pt|vh|vw)$/.test(value)) {
-    return 0;
-  }
-
-  // Otherwise keep as string (for percentages, auto, etc.)
-  return value;
-}
-
-/**
- * Merges multiple style objects while respecting !important declarations
- *
- * @param {Array} styleObjects - Array of style objects from parseStyle
- * @returns {Object} Final merged style object
- */
-function mergeStyles(styleObjects) {
-  if (!styleObjects || !Array.isArray(styleObjects)) return {};
-
-  // Track properties that have been applied with !important
-  const appliedImportantProps = new Set();
-
-  // Final computed style to apply to the node
-  const finalStyle = {};
-
-  // Process each style object in order (like CSS cascade)
-  for (const styleObj of styleObjects) {
-    if (!styleObj || !styleObj.computedStyle) continue;
-
-    const { computedStyle, importantProperties = [] } = styleObj;
-
-    // Process each property in the current style
-    for (const [prop, value] of Object.entries(computedStyle)) {
-      const isCurrentPropImportant = importantProperties.includes(prop);
-
-      // Apply the property if:
-      // 1. This property hasn't been applied yet as !important, OR
-      // 2. This property is being applied with !important now
-      if (!appliedImportantProps.has(prop) || isCurrentPropImportant) {
-        finalStyle[prop] = value;
-
-        // Track if we're applying this as important
-        if (isCurrentPropImportant) {
-          appliedImportantProps.add(prop);
-        }
-      }
-    }
-  }
-
-  // Return the final style that was applied (useful for debugging)
-  return finalStyle;
-}
 
 class UILayout {
   constructor(runtime) {
@@ -147,8 +16,189 @@ class UILayout {
    * @param {string} styleString - CSS-like style string
    */
   registerClass(className, styleString) {
-    const parsedStyle = parseStyle(styleString);
+    const parsedStyle = this.parseStyle(styleString);
     this.registeredClasses.set(className, parsedStyle);
+  }
+
+  /**
+   * Parses CSS-like text into a style object
+   * Enhanced to support flex properties and shorthand
+   *
+   * @param {string} cssText - CSS-like text with properties
+   * @returns {Object} Object containing computed style and important properties
+   */
+  parseStyle(cssText) {
+    if (!cssText) return { computedStyle: {}, importantProperties: [] };
+
+    const computedStyle = {};
+    const importantProperties = [];
+
+    // Split the input text by line breaks
+    const lines = cssText.split("\n");
+
+    for (let line of lines) {
+      // Remove any whitespace and optional semicolon
+      line = line.trim();
+      if (!line) continue;
+
+      if (line.endsWith(";")) {
+        line = line.slice(0, -1);
+      }
+
+      // Split by the first colon
+      const colonIndex = line.indexOf(":");
+      if (colonIndex === -1) continue;
+
+      const property = line.substring(0, colonIndex).trim();
+      let value = line.substring(colonIndex + 1).trim();
+
+      if (!property || !value) continue;
+
+      // Check for !important
+      const isImportant = value.includes("!important");
+      if (isImportant) {
+        value = value.replace(/\s*!important\s*$/, "").trim();
+        // Convert kebab-case to camelCase for the important list
+        importantProperties.push(this.kebabToCamel(property));
+      }
+
+      // Convert kebab-case to camelCase if needed
+      const camelProperty = this.kebabToCamel(property);
+
+      // Special handling for flex shorthand
+      if (camelProperty === "flex") {
+        this.parseFlexShorthand(value, computedStyle);
+        continue;
+      }
+
+      // Convert value if needed (handling numbers)
+      computedStyle[camelProperty] = this.convertValue(value);
+    }
+
+    return {
+      computedStyle,
+      importantProperties,
+    };
+  }
+
+  /**
+   * Parse flex shorthand property into individual flex properties
+   * @param {string} value - The flex shorthand value
+   * @param {Object} computedStyle - The style object to update
+   */
+  parseFlexShorthand(value, computedStyle) {
+    const parts = value.split(/\s+/);
+
+    // Handle different formats of the flex shorthand
+    if (parts.length === 1) {
+      // Single value can be either a number (flex-grow) or a keyword
+      if (parts[0] === "auto") {
+        computedStyle["flexGrow"] = 1;
+        computedStyle["flexShrink"] = 1;
+        computedStyle["flexBasis"] = "auto";
+      } else if (parts[0] === "none") {
+        computedStyle["flexGrow"] = 0;
+        computedStyle["flexShrink"] = 0;
+        computedStyle["flexBasis"] = "auto";
+      } else if (parts[0] === "initial") {
+        computedStyle["flexGrow"] = 0;
+        computedStyle["flexShrink"] = 1;
+        computedStyle["flexBasis"] = "auto";
+      } else {
+        // Assume it's a flex-grow value
+        computedStyle["flexGrow"] = this.convertValue(parts[0]);
+        computedStyle["flexShrink"] = 1;
+        computedStyle["flexBasis"] = "0";
+      }
+    } else if (parts.length === 2) {
+      // Two values: flex-grow and flex-shrink or flex-basis
+      computedStyle["flexGrow"] = this.convertValue(parts[0]);
+
+      // Check if second part is a number (flex-shrink) or has units (flex-basis)
+      if (/^\d+(\.\d+)?$/.test(parts[1])) {
+        computedStyle["flexShrink"] = this.convertValue(parts[1]);
+        computedStyle["flexBasis"] = "0";
+      } else {
+        computedStyle["flexShrink"] = 1;
+        computedStyle["flexBasis"] = parts[1];
+      }
+    } else if (parts.length >= 3) {
+      // Three values: flex-grow, flex-shrink, and flex-basis
+      computedStyle["flexGrow"] = this.convertValue(parts[0]);
+      computedStyle["flexShrink"] = this.convertValue(parts[1]);
+      computedStyle["flexBasis"] = parts[2];
+    }
+  }
+
+  /**
+   * Converts kebab-case to camelCase (e.g., min-width → minWidth)
+   * @param {string} str - Property name to convert
+   * @returns {string} camelCase property name
+   */
+  kebabToCamel(str) {
+    return str.replace(/-([a-z])/g, (match, group) => group.toUpperCase());
+  }
+
+  /**
+   * Converts string values to appropriate types
+   * @param {string} value - Value to convert
+   * @returns {string|number} Converted value
+   */
+  convertValue(value) {
+    // If it's a pure number (no units), convert to number type
+    if (/^-?\d+(\.\d+)?$/.test(value)) {
+      return parseFloat(value);
+    }
+
+    // Special case for zero with units - just return 0
+    if (/^0(px|%|em|rem|pt|vh|vw)$/.test(value)) {
+      return 0;
+    }
+
+    // Otherwise keep as string (for percentages, auto, etc.)
+    return value;
+  }
+
+  /**
+   * Merges multiple style objects while respecting !important declarations
+   *
+   * @param {Array} styleObjects - Array of style objects from parseStyle
+   * @returns {Object} Final merged style object
+   */
+  mergeStyles(styleObjects) {
+    if (!styleObjects || !Array.isArray(styleObjects)) return {};
+
+    // Track properties that have been applied with !important
+    const appliedImportantProps = new Set();
+
+    // Final computed style to apply to the node
+    const finalStyle = {};
+
+    // Process each style object in order (like CSS cascade)
+    for (const styleObj of styleObjects) {
+      if (!styleObj || !styleObj.computedStyle) continue;
+
+      const { computedStyle, importantProperties = [] } = styleObj;
+
+      // Process each property in the current style
+      for (const [prop, value] of Object.entries(computedStyle)) {
+        const isCurrentPropImportant = importantProperties.includes(prop);
+
+        // Apply the property if:
+        // 1. This property hasn't been applied yet as !important, OR
+        // 2. This property is being applied with !important now
+        if (!appliedImportantProps.has(prop) || isCurrentPropImportant) {
+          finalStyle[prop] = value;
+
+          // Track if we're applying this as important
+          if (isCurrentPropImportant) {
+            appliedImportantProps.add(prop);
+          }
+        }
+      }
+    }
+
+    return finalStyle;
   }
 
   /**
@@ -172,7 +222,6 @@ class UILayout {
     const inFlowChildren = [];
     const outOfFlowChildren = [];
     const percentSizedChildren = [];
-    const justifyContentChildren = [];
 
     for (const child of children) {
       // Skip non-visible or explicitly disabled children
@@ -189,16 +238,6 @@ class UILayout {
         percentSizedChildren.push(child);
       }
 
-      // Check if child uses non-default justify-content
-      const childLayoutProps = this.getLayoutProperties(child);
-      if (
-        childLayoutProps.display &&
-        childLayoutProps.justifyContent &&
-        childLayoutProps.justifyContent !== "start"
-      ) {
-        justifyContentChildren.push(child);
-      }
-
       const childPosition = childStyles.position || "relative";
       if (childPosition === "absolute" || childPosition === "anchor") {
         outOfFlowChildren.push(child);
@@ -207,7 +246,7 @@ class UILayout {
       }
     }
 
-    // 4. FIRST recursively process all in-flow children to establish their sizes
+    // 4. FIRST recursively process all in-flow children to establish their base sizes
     for (const child of inFlowChildren) {
       this.processInstance(child);
     }
@@ -224,38 +263,32 @@ class UILayout {
     // 6. Apply fit-content sizing if needed (after children are sized)
     if (layoutProps.fitContent) {
       this.applyFitContentSizing(instance, layoutProps);
-    }
-    // 6.1 If size changed and we have percentage-sized children, reapply their sizing
-    if (percentSizedChildren.length > 0) {
-      for (const child of percentSizedChildren) {
-        // Reapply the percentage sizing now that parent dimensions are finalized
-        this.applyPercentageSizing(child);
+
+      // 6.1 If size changed and we have percentage-sized children, reapply their sizing
+      if (percentSizedChildren.length > 0) {
+        for (const child of percentSizedChildren) {
+          // Reapply the percentage sizing now that parent dimensions are finalized
+          this.applyPercentageSizing(child);
+        }
+
+        // 6.2 And reapply layout to ensure positions are correct with new sizes
+        if (
+          layoutProps.display &&
+          layoutProps.position !== "absolute" &&
+          layoutProps.position !== "anchor"
+        ) {
+          this.applyNormalFlowLayout(instance, layoutProps, inFlowChildren);
+        }
       }
 
-      // 6.2 And reapply layout to ensure positions are correct with new sizes
-      if (
+      // 6.3 Reapply normal flow layout if the container size changed and we have flex children
+      else if (
         layoutProps.display &&
         layoutProps.position !== "absolute" &&
-        layoutProps.position !== "anchor"
+        layoutProps.position !== "anchor" &&
+        this.hasFlexChildren(inFlowChildren)
       ) {
         this.applyNormalFlowLayout(instance, layoutProps, inFlowChildren);
-      }
-    }
-
-    // 6.3 If size changed, we also need to update children with justify-content
-    if (justifyContentChildren.length > 0) {
-      for (const child of justifyContentChildren) {
-        const childLayoutProps = this.getLayoutProperties(child);
-        const childChildren = this.getLayoutChildren(child);
-
-        // Reapply layout with the updated parent size
-        if (
-          childLayoutProps.display &&
-          childLayoutProps.position !== "absolute" &&
-          childLayoutProps.position !== "anchor"
-        ) {
-          this.applyNormalFlowLayout(child, childLayoutProps, childChildren);
-        }
       }
     }
 
@@ -267,6 +300,51 @@ class UILayout {
       // Now position it relative to its container or anchor target
       this.applyOutOfFlowLayout(child);
     }
+  }
+
+  /**
+   * Check if any children have flex properties set
+   * @param {Array} children - Array of child instances
+   * @returns {boolean} True if any child has flex properties
+   */
+  hasFlexChildren(children) {
+    return children.some((child) => {
+      const styles = child._computedStyles || {};
+      return (
+        (styles.flexGrow && styles.flexGrow > 0) ||
+        typeof styles.flexShrink !== "undefined" ||
+        (styles.flexBasis && styles.flexBasis !== "auto")
+      );
+    });
+  }
+
+  /**
+   * Get styles for an instance based on its inline style and classes
+   * @param {WorldInstance} instance - The instance to get styles for
+   * @returns {Object} Merged style object
+   */
+  getInstanceStyles(instance) {
+    const stylesToMerge = [];
+
+    // Get classes from instance variables
+    const classString = instance.instVars?.classes || "";
+    const classes = classString.split(" ").filter((c) => c.trim());
+
+    // Add styles from each class
+    for (const className of classes) {
+      if (this.registeredClasses.has(className)) {
+        stylesToMerge.push(this.registeredClasses.get(className));
+      }
+    }
+
+    // Add inline style if present
+    const inlineStyle = instance.instVars?.style || "";
+    if (inlineStyle) {
+      stylesToMerge.push(this.parseStyle(inlineStyle));
+    }
+
+    // Merge all styles
+    return this.mergeStyles(stylesToMerge);
   }
 
   /**
@@ -297,6 +375,15 @@ class UILayout {
       return true;
     }
 
+    // Check for flex-basis with percentage
+    if (
+      styles.flexBasis &&
+      typeof styles.flexBasis === "string" &&
+      styles.flexBasis.endsWith("%")
+    ) {
+      return true;
+    }
+
     return false;
   }
 
@@ -312,6 +399,8 @@ class UILayout {
     const styles = instance._computedStyles;
     const parent = instance.getParent();
     const parentBoxModel = this.getBoxModel(parent);
+    const isHorizontal = styles.display === "horizontal";
+    const isVertical = styles.display === "vertical" || !styles.display;
 
     // Apply width percentages if present
     if (
@@ -361,80 +450,16 @@ class UILayout {
       }
     }
 
-    // Apply min/max constraints if present
-    const constraints = {};
-    if ("minWidth" in styles) constraints.minWidth = styles.minWidth;
-    if ("maxWidth" in styles) constraints.maxWidth = styles.maxWidth;
-    if ("minHeight" in styles) constraints.minHeight = styles.minHeight;
-    if ("maxHeight" in styles) constraints.maxHeight = styles.maxHeight;
+    // Apply flex-basis percentages if appropriate for the main axis
+    if (
+      styles.flexBasis &&
+      typeof styles.flexBasis === "string" &&
+      styles.flexBasis.endsWith("%")
+    ) {
+      const percentValue = parseFloat(styles.flexBasis) || 0;
 
-    if (Object.keys(constraints).length > 0) {
-      this.applyMinMaxConstraints(instance, constraints);
-    }
-  }
-
-  /**
-   * Get styles for an instance based on its inline style and classes
-   * @param {WorldInstance} instance - The instance to get styles for
-   * @returns {Object} Merged style object
-   */
-  getInstanceStyles(instance) {
-    const stylesToMerge = [];
-
-    // Get classes from instance variables
-    const classString = instance.instVars?.classes || "";
-    const classes = classString.split(" ").filter((c) => c.trim());
-
-    // Add styles from each class
-    for (const className of classes) {
-      if (this.registeredClasses.has(className)) {
-        stylesToMerge.push(this.registeredClasses.get(className));
-      }
-    }
-
-    // Add inline style if present
-    const inlineStyle = instance.instVars?.style || "";
-    if (inlineStyle) {
-      stylesToMerge.push(parseStyle(inlineStyle));
-    }
-
-    // Merge all styles
-    return mergeStyles(stylesToMerge);
-  }
-
-  /**
-   * Apply styles to an instance
-   * @param {WorldInstance} instance - The instance to apply styles to
-   * @param {Object} styles - Style object to apply
-   */
-  applyStylesToInstance(instance, styles) {
-    // Store computed styles on instance for later use
-    instance._computedStyles = styles;
-
-    // Build size constraints
-    const constraints = {};
-    if ("minWidth" in styles) constraints.minWidth = styles.minWidth;
-    if ("maxWidth" in styles) constraints.maxWidth = styles.maxWidth;
-    if ("minHeight" in styles) constraints.minHeight = styles.minHeight;
-    if ("maxHeight" in styles) constraints.maxHeight = styles.maxHeight;
-
-    // Handle percentage sizing if parent exists
-    if (instance.getParent()) {
-      if (
-        "percentWidth" in styles ||
-        ("width" in styles &&
-          styles.width &&
-          typeof styles.width === "string" &&
-          styles.width.endsWith("%"))
-      ) {
-        const percentValue =
-          "percentWidth" in styles
-            ? styles.percentWidth
-            : parseFloat(styles.width) || 0;
-
-        if (percentValue > 0) {
-          const parent = instance.getParent();
-          const parentBoxModel = this.getBoxModel(parent);
+      if (percentValue > 0) {
+        if (isHorizontal) {
           const availableWidth =
             parent.width -
             parentBoxModel.padding.left -
@@ -443,24 +468,7 @@ class UILayout {
             parentBoxModel.border.right;
 
           instance.width = (availableWidth * percentValue) / 100;
-        }
-      }
-
-      if (
-        "percentHeight" in styles ||
-        ("height" in styles &&
-          styles.height &&
-          typeof styles.height === "string" &&
-          styles.height.endsWith("%"))
-      ) {
-        const percentValue =
-          "percentHeight" in styles
-            ? styles.percentHeight
-            : parseFloat(styles.height) || 0;
-
-        if (percentValue > 0) {
-          const parent = instance.getParent();
-          const parentBoxModel = this.getBoxModel(parent);
+        } else if (isVertical) {
           const availableHeight =
             parent.height -
             parentBoxModel.padding.top -
@@ -473,31 +481,64 @@ class UILayout {
       }
     }
 
-    // Apply explicit width/height if specified as numeric values
-    if ("width" in styles && typeof styles.width === "number") {
-      instance.width = styles.width;
+    // Apply min/max constraints
+    this.applyMinMaxConstraints(instance, styles);
+  }
+
+  /**
+   * Apply min/max constraints to an instance
+   * @param {WorldInstance} instance - The instance to constrain
+   * @param {Object} styles - Style object with constraints
+   * @returns {Object} Info about which constraints were applied
+   */
+  applyMinMaxConstraints(instance, styles) {
+    const constraints = {
+      minWidth: styles.minWidth,
+      maxWidth: styles.maxWidth,
+      minHeight: styles.minHeight,
+      maxHeight: styles.maxHeight,
+    };
+
+    let widthConstrained = false;
+    let heightConstrained = false;
+
+    // Apply min width constraint
+    if (
+      constraints.minWidth !== undefined &&
+      instance.width < constraints.minWidth
+    ) {
+      instance.width = constraints.minWidth;
+      widthConstrained = true;
     }
 
-    if ("height" in styles && typeof styles.height === "number") {
-      instance.height = styles.height;
+    // Apply max width constraint
+    if (
+      constraints.maxWidth !== undefined &&
+      instance.width > constraints.maxWidth
+    ) {
+      instance.width = constraints.maxWidth;
+      widthConstrained = true;
     }
 
-    // Apply min/max constraints after explicit sizing
-    if ("minWidth" in constraints) {
-      instance.width = Math.max(instance.width, constraints.minWidth);
+    // Apply min height constraint
+    if (
+      constraints.minHeight !== undefined &&
+      instance.height < constraints.minHeight
+    ) {
+      instance.height = constraints.minHeight;
+      heightConstrained = true;
     }
 
-    if ("maxWidth" in constraints) {
-      instance.width = Math.min(instance.width, constraints.maxWidth);
+    // Apply max height constraint
+    if (
+      constraints.maxHeight !== undefined &&
+      instance.height > constraints.maxHeight
+    ) {
+      instance.height = constraints.maxHeight;
+      heightConstrained = true;
     }
 
-    if ("minHeight" in constraints) {
-      instance.height = Math.max(instance.height, constraints.minHeight);
-    }
-
-    if ("maxHeight" in constraints) {
-      instance.height = Math.min(instance.height, constraints.maxHeight);
-    }
+    return { widthConstrained, heightConstrained };
   }
 
   /**
@@ -1003,296 +1044,6 @@ class UILayout {
   }
 
   /**
-   * Layout children in a vertical stack
-   * @param {WorldInstance} container - The container
-   * @param {Object} layoutProps - Layout properties
-   * @param {Array} children - Array of child instances
-   */
-  layoutVertical(container, layoutProps, children) {
-    // Get container box model
-    const containerBoxModel = this.getBoxModel(container);
-
-    // Extract layout parameters
-    const gap = layoutProps.gap || 0;
-    const alignment = layoutProps.alignItems || "start";
-    const justifyContent = layoutProps.justifyContent || "start";
-
-    // Calculate available space
-    const contentHeight =
-      container.height -
-      containerBoxModel.padding.top -
-      containerBoxModel.padding.bottom -
-      containerBoxModel.border.top -
-      containerBoxModel.border.bottom;
-
-    // Calculate total children height including margins but without gaps
-    let totalChildrenHeight = 0;
-    children.forEach((child) => {
-      const childBoxModel = this.getBoxModel(child);
-      totalChildrenHeight +=
-        child.height + childBoxModel.margin.top + childBoxModel.margin.bottom;
-    });
-
-    // Calculate total gaps (only between elements, not after the last one)
-    const totalGaps = children.length > 1 ? gap * (children.length - 1) : 0;
-
-    // Calculate extra space
-    const extraSpace = Math.max(
-      0,
-      contentHeight - totalChildrenHeight - totalGaps
-    );
-
-    // Calculate spacing based on justifyContent
-    let startOffset = 0;
-    let spaceBetween = 0;
-    let spaceAround = 0;
-
-    switch (justifyContent) {
-      case "start":
-        startOffset = 0;
-        break;
-
-      case "center":
-        startOffset = extraSpace / 2;
-        break;
-
-      case "end":
-        startOffset = extraSpace;
-        break;
-
-      case "space-between":
-        spaceBetween =
-          children.length > 1 ? extraSpace / (children.length - 1) : 0;
-        break;
-
-      case "space-around":
-        spaceAround = children.length > 0 ? extraSpace / children.length : 0;
-        break;
-    }
-
-    // Start position
-    let currentY =
-      containerBoxModel.padding.top +
-      containerBoxModel.border.top +
-      startOffset;
-
-    // For space-around, add half space at the beginning
-    if (justifyContent === "space-around" && children.length > 0) {
-      currentY += spaceAround / 2;
-    }
-
-    // Position each child
-    children.forEach((child, index) => {
-      const childBoxModel = this.getBoxModel(child);
-
-      // Account for child's margin
-      currentY += childBoxModel.margin.top;
-
-      // Position child relative to parent
-      child.y = container.y + currentY;
-
-      // Handle horizontal alignment
-      const contentWidth =
-        container.width -
-        containerBoxModel.padding.left -
-        containerBoxModel.padding.right -
-        containerBoxModel.border.left -
-        containerBoxModel.border.right;
-
-      const childTotalWidth =
-        child.width + childBoxModel.margin.left + childBoxModel.margin.right;
-
-      switch (alignment) {
-        case "center":
-          child.x =
-            container.x +
-            containerBoxModel.padding.left +
-            containerBoxModel.border.left +
-            (contentWidth - childTotalWidth) / 2 +
-            childBoxModel.margin.left;
-          break;
-
-        case "end":
-          child.x =
-            container.x +
-            container.width -
-            containerBoxModel.padding.right -
-            containerBoxModel.border.right -
-            child.width -
-            childBoxModel.margin.right;
-          break;
-
-        default: // 'start'
-          child.x =
-            container.x +
-            containerBoxModel.padding.left +
-            containerBoxModel.border.left +
-            childBoxModel.margin.left;
-      }
-
-      // Move to next position
-      currentY += child.height + childBoxModel.margin.bottom;
-
-      // Add gap or space-between for next element
-      if (index < children.length - 1) {
-        currentY += gap;
-
-        // Add extra space for space-between or space-around
-        if (justifyContent === "space-between") {
-          currentY += spaceBetween;
-        } else if (justifyContent === "space-around") {
-          currentY += spaceAround;
-        }
-      }
-    });
-  }
-
-  /**
-   * Layout children in a horizontal row
-   * @param {WorldInstance} container - The container
-   * @param {Object} layoutProps - Layout properties
-   * @param {Array} children - Array of child instances
-   */
-  layoutHorizontal(container, layoutProps, children) {
-    // Get container box model
-    const containerBoxModel = this.getBoxModel(container);
-
-    // Extract layout parameters
-    const gap = layoutProps.gap || 0;
-    const alignment = layoutProps.alignItems || "start";
-    const justifyContent = layoutProps.justifyContent || "start";
-
-    // Calculate available space
-    const contentWidth =
-      container.width -
-      containerBoxModel.padding.left -
-      containerBoxModel.padding.right -
-      containerBoxModel.border.left -
-      containerBoxModel.border.right;
-
-    // Calculate total children width including margins but without gaps
-    let totalChildrenWidth = 0;
-    children.forEach((child) => {
-      const childBoxModel = this.getBoxModel(child);
-      totalChildrenWidth +=
-        child.width + childBoxModel.margin.left + childBoxModel.margin.right;
-    });
-
-    // Calculate total gaps (only between elements, not after the last one)
-    const totalGaps = children.length > 1 ? gap * (children.length - 1) : 0;
-
-    // Calculate extra space
-    const extraSpace = Math.max(
-      0,
-      contentWidth - totalChildrenWidth - totalGaps
-    );
-
-    // Calculate spacing based on justifyContent
-    let startOffset = 0;
-    let spaceBetween = 0;
-    let spaceAround = 0;
-
-    switch (justifyContent) {
-      case "start":
-        startOffset = 0;
-        break;
-
-      case "center":
-        startOffset = extraSpace / 2;
-        break;
-
-      case "end":
-        startOffset = extraSpace;
-        break;
-
-      case "space-between":
-        spaceBetween =
-          children.length > 1 ? extraSpace / (children.length - 1) : 0;
-        break;
-
-      case "space-around":
-        spaceAround = children.length > 0 ? extraSpace / children.length : 0;
-        break;
-    }
-
-    // Start position
-    let currentX =
-      containerBoxModel.padding.left +
-      containerBoxModel.border.left +
-      startOffset;
-
-    // For space-around, add half space at the beginning
-    if (justifyContent === "space-around" && children.length > 0) {
-      currentX += spaceAround / 2;
-    }
-
-    // Position each child
-    children.forEach((child, index) => {
-      const childBoxModel = this.getBoxModel(child);
-
-      // Account for child's margin
-      currentX += childBoxModel.margin.left;
-
-      // Position child relative to parent
-      child.x = container.x + currentX;
-
-      // Handle vertical alignment
-      const contentHeight =
-        container.height -
-        containerBoxModel.padding.top -
-        containerBoxModel.padding.bottom -
-        containerBoxModel.border.top -
-        containerBoxModel.border.bottom;
-
-      const childTotalHeight =
-        child.height + childBoxModel.margin.top + childBoxModel.margin.bottom;
-
-      switch (alignment) {
-        case "center":
-          child.y =
-            container.y +
-            containerBoxModel.padding.top +
-            containerBoxModel.border.top +
-            (contentHeight - childTotalHeight) / 2 +
-            childBoxModel.margin.top;
-          break;
-
-        case "end":
-          child.y =
-            container.y +
-            container.height -
-            containerBoxModel.padding.bottom -
-            containerBoxModel.border.bottom -
-            child.height -
-            childBoxModel.margin.bottom;
-          break;
-
-        default: // 'start'
-          child.y =
-            container.y +
-            containerBoxModel.padding.top +
-            containerBoxModel.border.top +
-            childBoxModel.margin.top;
-      }
-
-      // Move to next position
-      currentX += child.width + childBoxModel.margin.right;
-
-      // Add gap or space-between for next element
-      if (index < children.length - 1) {
-        currentX += gap;
-
-        // Add extra space for space-between or space-around
-        if (justifyContent === "space-between") {
-          currentX += spaceBetween;
-        } else if (justifyContent === "space-around") {
-          currentX += spaceAround;
-        }
-      }
-    });
-  }
-
-  /**
    * Layout children in a grid
    * @param {WorldInstance} container - The container
    * @param {Object} layoutProps - Layout properties
@@ -1384,6 +1135,7 @@ class UILayout {
 
     // Now position each child
     children.forEach((child, index) => {
+      const childStyles = child._computedStyles || {};
       const childBoxModel = this.getBoxModel(child);
 
       // Calculate grid position
@@ -1398,21 +1150,836 @@ class UILayout {
       const baseY =
         containerBoxModel.padding.top + containerBoxModel.border.top;
 
-      // Position with justify-content applied
-      child.x =
-        container.x +
-        baseX +
-        col * (maxCellWidth + gap + extraColumnGap) +
-        childBoxModel.margin.left;
+      // Handle alignSelf and justifySelf for individual grid items
+      const alignSelf =
+        childStyles.alignSelf || layoutProps.alignItems || "start";
+      const justifySelf = childStyles.justifySelf || "start";
 
-      child.y =
-        container.y +
-        baseY +
-        row * (maxCellHeight + gap) +
-        childBoxModel.margin.top;
+      // Calculate cell boundaries
+      const cellLeft = baseX + col * (maxCellWidth + gap + extraColumnGap);
+      const cellTop = baseY + row * (maxCellHeight + gap);
+      const cellWidth = maxCellWidth;
+      const cellHeight = maxCellHeight;
+
+      // Calculate item position within cell based on self-alignment
+      let itemX, itemY;
+
+      // Horizontal positioning (justifySelf)
+      switch (justifySelf) {
+        case "center":
+          itemX =
+            cellLeft +
+            (cellWidth -
+              (child.width +
+                childBoxModel.margin.left +
+                childBoxModel.margin.right)) /
+              2 +
+            childBoxModel.margin.left;
+          break;
+        case "end":
+          itemX =
+            cellLeft + cellWidth - child.width - childBoxModel.margin.right;
+          break;
+        default: // 'start'
+          itemX = cellLeft + childBoxModel.margin.left;
+      }
+
+      // Vertical positioning (alignSelf)
+      switch (alignSelf) {
+        case "center":
+          itemY =
+            cellTop +
+            (cellHeight -
+              (child.height +
+                childBoxModel.margin.top +
+                childBoxModel.margin.bottom)) /
+              2 +
+            childBoxModel.margin.top;
+          break;
+        case "end":
+          itemY =
+            cellTop + cellHeight - child.height - childBoxModel.margin.bottom;
+          break;
+        default: // 'start'
+          itemY = cellTop + childBoxModel.margin.top;
+      }
+
+      // Apply final position
+      child.x = container.x + itemX;
+      child.y = container.y + itemY;
+    });
+  }
+
+  /**
+   * Apply styles to an instance
+   * @param {WorldInstance} instance - The instance to apply styles to
+   * @param {Object} styles - Style object to apply
+   */
+  applyStylesToInstance(instance, styles) {
+    // Store computed styles on instance for later use
+    instance._computedStyles = styles;
+
+    // Handle flex shorthand property directly
+    if (styles.flex !== undefined && typeof styles.flex !== "object") {
+      // Extract the numeric value or parse the shorthand if it's a string
+      if (typeof styles.flex === "number") {
+        styles.flexGrow = styles.flex;
+        styles.flexShrink = 1;
+        styles.flexBasis = "0px";
+      }
+      // Note: String values like "1 2 120" should be handled by parseFlexShorthand
+    }
+
+    // Build size constraints
+    const constraints = {};
+    if ("minWidth" in styles) constraints.minWidth = styles.minWidth;
+    if ("maxWidth" in styles) constraints.maxWidth = styles.maxWidth;
+    if ("minHeight" in styles) constraints.minHeight = styles.minHeight;
+    if ("maxHeight" in styles) constraints.maxHeight = styles.maxHeight;
+
+    // Handle percentage sizing if parent exists
+    if (instance.getParent()) {
+      if (
+        "percentWidth" in styles ||
+        ("width" in styles &&
+          styles.width &&
+          typeof styles.width === "string" &&
+          styles.width.endsWith("%"))
+      ) {
+        const percentValue =
+          "percentWidth" in styles
+            ? styles.percentWidth
+            : parseFloat(styles.width) || 0;
+
+        if (percentValue > 0) {
+          const parent = instance.getParent();
+          const parentBoxModel = this.getBoxModel(parent);
+          const availableWidth =
+            parent.width -
+            parentBoxModel.padding.left -
+            parentBoxModel.padding.right -
+            parentBoxModel.border.left -
+            parentBoxModel.border.right;
+
+          instance.width = (availableWidth * percentValue) / 100;
+        }
+      }
+
+      if (
+        "percentHeight" in styles ||
+        ("height" in styles &&
+          styles.height &&
+          typeof styles.height === "string" &&
+          styles.height.endsWith("%"))
+      ) {
+        const percentValue =
+          "percentHeight" in styles
+            ? styles.percentHeight
+            : parseFloat(styles.height) || 0;
+
+        if (percentValue > 0) {
+          const parent = instance.getParent();
+          const parentBoxModel = this.getBoxModel(parent);
+          const availableHeight =
+            parent.height -
+            parentBoxModel.padding.top -
+            parentBoxModel.padding.bottom -
+            parentBoxModel.border.top -
+            parentBoxModel.border.bottom;
+
+          instance.height = (availableHeight * percentValue) / 100;
+        }
+      }
+    }
+
+    // Apply flex-basis for initial dimension (only if not percentage-based)
+    const parent = instance.getParent();
+    const isHorizontal = styles.display === "horizontal";
+    const isVertical = styles.display === "vertical" || !styles.display;
+
+    if (parent && (isHorizontal || isVertical)) {
+      const flexBasis = styles.flexBasis;
+
+      if (flexBasis && flexBasis !== "auto" && typeof flexBasis === "number") {
+        // Apply flex-basis along the main axis (width for row, height for column)
+        if (isHorizontal) {
+          instance.width = flexBasis;
+        } else if (isVertical) {
+          instance.height = flexBasis;
+        }
+      }
+    }
+
+    // Apply explicit width/height if specified as numeric values
+    if ("width" in styles && typeof styles.width === "number") {
+      instance.width = styles.width;
+    }
+
+    if ("height" in styles && typeof styles.height === "number") {
+      instance.height = styles.height;
+    }
+
+    // Apply min/max constraints after explicit sizing
+    if ("minWidth" in constraints) {
+      instance.width = Math.max(instance.width, constraints.minWidth);
+    }
+
+    if ("maxWidth" in constraints) {
+      instance.width = Math.min(instance.width, constraints.maxWidth);
+    }
+
+    if ("minHeight" in constraints) {
+      instance.height = Math.max(instance.height, constraints.minHeight);
+    }
+
+    if ("maxHeight" in constraints) {
+      instance.height = Math.min(instance.height, constraints.maxHeight);
+    }
+  }
+
+  /**
+   * Layout children in a vertical stack with flex distribution
+   * @param {WorldInstance} container - The container
+   * @param {Object} layoutProps - Layout properties
+   * @param {Array} children - Array of child instances
+   */
+  layoutVertical(container, layoutProps, children) {
+    // Get container box model
+    const containerBoxModel = this.getBoxModel(container);
+
+    // Extract layout parameters
+    const gap = layoutProps.gap || 0;
+    const alignment = layoutProps.alignItems || "start";
+
+    // Calculate available space
+    const contentHeight =
+      container.height -
+      containerBoxModel.padding.top -
+      containerBoxModel.padding.bottom -
+      containerBoxModel.border.top -
+      containerBoxModel.border.bottom;
+
+    const contentWidth =
+      container.width -
+      containerBoxModel.padding.left -
+      containerBoxModel.padding.right -
+      containerBoxModel.border.left -
+      containerBoxModel.border.right;
+
+    // First pass: collect fixed height items and flex items
+    const fixedItems = [];
+    const flexItems = [];
+    let totalFixedHeight = 0;
+    let totalFlexGrow = 0;
+    let totalFlexShrinkFactors = 0;
+
+    children.forEach((child) => {
+      const childStyles = child._computedStyles || {};
+      const childBoxModel = this.getBoxModel(child);
+
+      // Determine if this is a flex item based on flex-grow or flex-shrink
+      const flexGrow = parseFloat(childStyles.flexGrow) || 0;
+      const flexShrink = parseFloat(childStyles.flexShrink);
+      const actualFlexShrink =
+        typeof flexShrink === "undefined" ? 1 : flexShrink;
+
+      // Determine the base height (flex-basis)
+      let baseHeight = child.height; // Default to current height
+
+      // Check if flex-basis is set and apply it first
+      if (
+        childStyles.flexBasis !== undefined &&
+        childStyles.flexBasis !== "auto"
+      ) {
+        if (typeof childStyles.flexBasis === "number") {
+          baseHeight = childStyles.flexBasis;
+        } else if (
+          typeof childStyles.flexBasis === "string" &&
+          !childStyles.flexBasis.endsWith("%")
+        ) {
+          // Handle other units if supported
+          baseHeight = parseFloat(childStyles.flexBasis) || baseHeight;
+        }
+        // Percentage flex-basis is handled earlier in applyPercentageSizing
+      }
+
+      if (flexGrow > 0 || actualFlexShrink > 0) {
+        // This is a flex item
+        flexItems.push({
+          instance: child,
+          boxModel: childBoxModel,
+          flexGrow,
+          flexShrink: actualFlexShrink,
+          baseHeight: baseHeight, // Store the flex-basis or initial height
+          initialHeight: child.height, // Store current height for reference
+          minHeight: childStyles.minHeight,
+          maxHeight: childStyles.maxHeight,
+        });
+
+        totalFlexGrow += flexGrow;
+        totalFlexShrinkFactors += actualFlexShrink * baseHeight;
+      } else {
+        // This is a fixed item
+        fixedItems.push(child);
+        totalFixedHeight +=
+          child.height + childBoxModel.margin.top + childBoxModel.margin.bottom;
+      }
+    });
+
+    // Calculate total gaps
+    const totalGaps = children.length > 1 ? (children.length - 1) * gap : 0;
+
+    // Calculate the space available for flex distribution
+    let availableSpace = contentHeight - totalFixedHeight - totalGaps;
+
+    // Ensure we don't try to distribute more space than is actually available
+    const totalAvailableHeight = contentHeight - totalGaps;
+
+    // Initialize flex items with their base heights
+    let initialFlexHeight = 0;
+    flexItems.forEach((item) => {
+      item.targetHeight = item.baseHeight;
+      initialFlexHeight +=
+        item.baseHeight +
+        item.boxModel.margin.top +
+        item.boxModel.margin.bottom;
+    });
+
+    // Adjust available space if needed
+    if (initialFlexHeight + totalFixedHeight > totalAvailableHeight) {
+      // Need to shrink items
+      availableSpace =
+        totalAvailableHeight - totalFixedHeight - initialFlexHeight;
+    } else {
+      // Only grow up to the container height
+      availableSpace = Math.min(
+        availableSpace,
+        totalAvailableHeight - totalFixedHeight - initialFlexHeight
+      );
+    }
+
+    // Keep track of remaining flex grow
+    let remainingFlexGrow = totalFlexGrow;
+    let remainingSpace = availableSpace;
+    let stillFlexing = true;
+
+    // Track constrained items to skip in subsequent passes
+    const constrainedItems = new Set();
+
+    // Apply flex-grow through multiple passes if needed (handling min/max constraints)
+    if (availableSpace > 0 && totalFlexGrow > 0) {
+      // Distribute space in multiple passes if needed
+      while (remainingSpace > 0.1 && remainingFlexGrow > 0 && stillFlexing) {
+        let spaceConsumedThisPass = 0;
+        stillFlexing = false;
+
+        // Distribute remaining space based on remaining flex-grow factors
+        flexItems.forEach((item) => {
+          if (constrainedItems.has(item)) return;
+
+          if (item.flexGrow > 0) {
+            const extraSpace =
+              (item.flexGrow / remainingFlexGrow) * remainingSpace;
+            const newTargetHeight = item.targetHeight + extraSpace;
+
+            // Check constraints
+            let constrainedHeight = newTargetHeight;
+            let wasConstrained = false;
+
+            if (
+              item.minHeight !== undefined &&
+              constrainedHeight < item.minHeight
+            ) {
+              constrainedHeight = item.minHeight;
+              wasConstrained = true;
+            }
+
+            if (
+              item.maxHeight !== undefined &&
+              constrainedHeight > item.maxHeight
+            ) {
+              constrainedHeight = item.maxHeight;
+              wasConstrained = true;
+            }
+
+            // Calculate how much space was actually consumed
+            const actualExtraSpace = constrainedHeight - item.targetHeight;
+            spaceConsumedThisPass += actualExtraSpace;
+
+            // Update target height
+            item.targetHeight = constrainedHeight;
+
+            // If constrained, mark this item to skip in future passes
+            if (wasConstrained) {
+              constrainedItems.add(item);
+              remainingFlexGrow -= item.flexGrow;
+            } else {
+              stillFlexing = true;
+            }
+          }
+        });
+
+        // Update remaining space for next pass
+        remainingSpace -= spaceConsumedThisPass;
+
+        // Safety check to prevent infinite loops
+        if (spaceConsumedThisPass < 0.01) break;
+      }
+    } else if (availableSpace < 0 && totalFlexShrinkFactors > 0) {
+      // Shrink case - reduce sizes proportionally
+      flexItems.forEach((item) => {
+        if (item.flexShrink > 0) {
+          const shrinkRatio =
+            (item.flexShrink * item.baseHeight) / totalFlexShrinkFactors;
+          const reduction = Math.abs(availableSpace) * shrinkRatio;
+          item.targetHeight = Math.max(0, item.baseHeight - reduction);
+
+          // Apply min constraint (max is not needed here as we're making items smaller)
+          if (
+            item.minHeight !== undefined &&
+            item.targetHeight < item.minHeight
+          ) {
+            item.targetHeight = item.minHeight;
+          }
+        } else {
+          item.targetHeight = item.baseHeight;
+        }
+      });
+    }
+
+    // Apply final sizes to flex items
+    flexItems.forEach((item) => {
+      item.instance.height = item.targetHeight;
+    });
+
+    // Calculate spacing based on justifyContent
+    const justifyContent = layoutProps.justifyContent || "start";
+
+    // Recalculate actual total height after flex adjustments
+    let actualTotalHeight = 0;
+    children.forEach((child) => {
+      const childBoxModel = this.getBoxModel(child);
+      actualTotalHeight +=
+        child.height + childBoxModel.margin.top + childBoxModel.margin.bottom;
+    });
+    actualTotalHeight += totalGaps;
+
+    // Calculate spacing based on justifyContent
+    let startOffset = 0;
+    let spaceBetween = 0;
+    let spaceAround = 0;
+
+    const justifyRemainingSpace = Math.max(
+      0,
+      contentHeight - actualTotalHeight
+    );
+
+    switch (justifyContent) {
+      case "start":
+        startOffset = 0;
+        break;
+      case "center":
+        startOffset = justifyRemainingSpace / 2;
+        break;
+      case "end":
+        startOffset = justifyRemainingSpace;
+        break;
+      case "space-between":
+        spaceBetween =
+          children.length > 1
+            ? justifyRemainingSpace / (children.length - 1)
+            : 0;
+        break;
+      case "space-around":
+        spaceAround =
+          children.length > 0 ? justifyRemainingSpace / children.length : 0;
+        break;
+    }
+
+    // Position children with justifyContent and alignItems
+    let currentY =
+      containerBoxModel.padding.top +
+      containerBoxModel.border.top +
+      startOffset;
+
+    if (justifyContent === "space-around" && children.length > 0) {
+      currentY += spaceAround / 2;
+    }
+
+    children.forEach((child, index) => {
+      const childStyles = child._computedStyles || {};
+      const childBoxModel = this.getBoxModel(child);
+
+      // Account for child's margin
+      currentY += childBoxModel.margin.top;
+
+      // Position vertically
+      child.y = container.y + currentY;
+
+      // Handle horizontal alignment (cross-axis)
+      // Check for alignSelf which overrides the container's alignItems
+      const alignSelf = childStyles.alignSelf || alignment;
+
+      switch (alignSelf) {
+        case "center":
+          child.x =
+            container.x +
+            containerBoxModel.padding.left +
+            containerBoxModel.border.left +
+            (contentWidth -
+              (child.width +
+                childBoxModel.margin.left +
+                childBoxModel.margin.right)) /
+              2 +
+            childBoxModel.margin.left;
+          break;
+        case "end":
+          child.x =
+            container.x +
+            container.width -
+            containerBoxModel.padding.right -
+            containerBoxModel.border.right -
+            child.width -
+            childBoxModel.margin.right;
+          break;
+        default: // 'start'
+          child.x =
+            container.x +
+            containerBoxModel.padding.left +
+            containerBoxModel.border.left +
+            childBoxModel.margin.left;
+      }
+
+      // Move to next vertical position
+      currentY += child.height + childBoxModel.margin.bottom;
+
+      // Add gap and spacing for next element
+      if (index < children.length - 1) {
+        currentY += gap + spaceBetween;
+        if (justifyContent === "space-around") {
+          currentY += spaceAround;
+        }
+      }
+    });
+  }
+
+  /**
+   * Layout children in a horizontal row with flex distribution
+   * @param {WorldInstance} container - The container
+   * @param {Object} layoutProps - Layout properties
+   * @param {Array} children - Array of child instances
+   */
+  layoutHorizontal(container, layoutProps, children) {
+    // Get container box model
+    const containerBoxModel = this.getBoxModel(container);
+
+    // Extract layout parameters
+    const gap = layoutProps.gap || 0;
+    const alignment = layoutProps.alignItems || "start";
+
+    // Calculate available space
+    const contentWidth =
+      container.width -
+      containerBoxModel.padding.left -
+      containerBoxModel.padding.right -
+      containerBoxModel.border.left -
+      containerBoxModel.border.right;
+
+    const contentHeight =
+      container.height -
+      containerBoxModel.padding.top -
+      containerBoxModel.padding.bottom -
+      containerBoxModel.border.top -
+      containerBoxModel.border.bottom;
+
+    // First pass: collect fixed width items and flex items
+    const fixedItems = [];
+    const flexItems = [];
+    let totalFixedWidth = 0;
+    let totalFlexGrow = 0;
+    let totalFlexShrinkFactors = 0;
+
+    children.forEach((child) => {
+      const childStyles = child._computedStyles || {};
+      const childBoxModel = this.getBoxModel(child);
+
+      // Determine if this is a flex item based on flex-grow or flex-shrink
+      const flexGrow = parseFloat(childStyles.flexGrow) || 0;
+      const flexShrink = parseFloat(childStyles.flexShrink);
+      const actualFlexShrink =
+        typeof flexShrink === "undefined" ? 1 : flexShrink;
+
+      // Determine the base width (flex-basis)
+      let baseWidth = child.width; // Default to current width
+
+      // Check if flex-basis is set and apply it first
+      if (
+        childStyles.flexBasis !== undefined &&
+        childStyles.flexBasis !== "auto"
+      ) {
+        if (typeof childStyles.flexBasis === "number") {
+          baseWidth = childStyles.flexBasis;
+        } else if (
+          typeof childStyles.flexBasis === "string" &&
+          !childStyles.flexBasis.endsWith("%")
+        ) {
+          // Handle other units if supported
+          baseWidth = parseFloat(childStyles.flexBasis) || baseWidth;
+        }
+        // Percentage flex-basis is handled earlier in applyPercentageSizing
+      }
+
+      if (flexGrow > 0 || actualFlexShrink > 0) {
+        // This is a flex item
+        flexItems.push({
+          instance: child,
+          boxModel: childBoxModel,
+          flexGrow,
+          flexShrink: actualFlexShrink,
+          baseWidth: baseWidth, // Store the flex-basis or initial width
+          initialWidth: child.width, // Store current width for reference
+          minWidth: childStyles.minWidth,
+          maxWidth: childStyles.maxWidth,
+        });
+
+        totalFlexGrow += flexGrow;
+        totalFlexShrinkFactors += actualFlexShrink * baseWidth;
+      } else {
+        // This is a fixed item
+        fixedItems.push(child);
+        totalFixedWidth +=
+          child.width + childBoxModel.margin.left + childBoxModel.margin.right;
+      }
+    });
+
+    // Calculate total gaps
+    const totalGaps = children.length > 1 ? (children.length - 1) * gap : 0;
+
+    // Ensure we don't try to distribute more space than is actually available
+    const totalAvailableWidth = contentWidth - totalGaps;
+
+    // Initialize flex items with their base widths
+    let initialFlexWidth = 0;
+    flexItems.forEach((item) => {
+      item.targetWidth = item.baseWidth;
+      initialFlexWidth +=
+        item.baseWidth + item.boxModel.margin.left + item.boxModel.margin.right;
+    });
+
+    // Calculate the space available for flex distribution
+    let availableSpace =
+      contentWidth - totalFixedWidth - initialFlexWidth - totalGaps;
+
+    // Adjust available space if needed
+    if (initialFlexWidth + totalFixedWidth > totalAvailableWidth) {
+      // Need to shrink items
+      availableSpace = totalAvailableWidth - totalFixedWidth - initialFlexWidth;
+    } else {
+      // Only grow up to the container width
+      availableSpace = Math.min(
+        availableSpace,
+        totalAvailableWidth - totalFixedWidth - initialFlexWidth
+      );
+    }
+
+    // Keep track of remaining flex grow
+    let remainingFlexGrow = totalFlexGrow;
+    let remainingSpace = availableSpace;
+    let stillFlexing = true;
+
+    // Track constrained items to skip in subsequent passes
+    const constrainedItems = new Set();
+
+    // Apply flex-grow through multiple passes if needed (handling min/max constraints)
+    if (availableSpace > 0 && totalFlexGrow > 0) {
+      // Distribute space in multiple passes if needed
+      while (remainingSpace > 0.1 && remainingFlexGrow > 0 && stillFlexing) {
+        let spaceConsumedThisPass = 0;
+        stillFlexing = false;
+
+        // Distribute remaining space based on remaining flex-grow factors
+        flexItems.forEach((item) => {
+          if (constrainedItems.has(item)) return;
+
+          if (item.flexGrow > 0) {
+            const extraSpace =
+              (item.flexGrow / remainingFlexGrow) * remainingSpace;
+            const newTargetWidth = item.targetWidth + extraSpace;
+
+            // Check constraints
+            let constrainedWidth = newTargetWidth;
+            let wasConstrained = false;
+
+            if (
+              item.minWidth !== undefined &&
+              constrainedWidth < item.minWidth
+            ) {
+              constrainedWidth = item.minWidth;
+              wasConstrained = true;
+            }
+
+            if (
+              item.maxWidth !== undefined &&
+              constrainedWidth > item.maxWidth
+            ) {
+              constrainedWidth = item.maxWidth;
+              wasConstrained = true;
+            }
+
+            // Calculate how much space was actually consumed
+            const actualExtraSpace = constrainedWidth - item.targetWidth;
+            spaceConsumedThisPass += actualExtraSpace;
+
+            // Update target width
+            item.targetWidth = constrainedWidth;
+
+            // If constrained, mark this item to skip in future passes
+            if (wasConstrained) {
+              constrainedItems.add(item);
+              remainingFlexGrow -= item.flexGrow;
+            } else {
+              stillFlexing = true;
+            }
+          }
+        });
+
+        // Update remaining space for next pass
+        remainingSpace -= spaceConsumedThisPass;
+
+        // Safety check to prevent infinite loops
+        if (spaceConsumedThisPass < 0.01) break;
+      }
+    } else if (availableSpace < 0 && totalFlexShrinkFactors > 0) {
+      // Shrink case - reduce sizes proportionally
+      flexItems.forEach((item) => {
+        if (item.flexShrink > 0) {
+          const shrinkRatio =
+            (item.flexShrink * item.baseWidth) / totalFlexShrinkFactors;
+          const reduction = Math.abs(availableSpace) * shrinkRatio;
+          item.targetWidth = Math.max(0, item.baseWidth - reduction);
+
+          // Apply min constraint (max is not needed here as we're making items smaller)
+          if (item.minWidth !== undefined && item.targetWidth < item.minWidth) {
+            item.targetWidth = item.minWidth;
+          }
+        } else {
+          item.targetWidth = item.baseWidth;
+        }
+      });
+    }
+
+    // Apply final sizes to flex items
+    flexItems.forEach((item) => {
+      item.instance.width = item.targetWidth;
+    });
+
+    // Calculate spacing based on justifyContent
+    const justifyContent = layoutProps.justifyContent || "start";
+
+    // Recalculate actual total width after flex adjustments
+    let actualTotalWidth = 0;
+    children.forEach((child) => {
+      const childBoxModel = this.getBoxModel(child);
+      actualTotalWidth +=
+        child.width + childBoxModel.margin.left + childBoxModel.margin.right;
+    });
+    actualTotalWidth += totalGaps;
+
+    // Calculate spacing based on justifyContent
+    let startOffset = 0;
+    let spaceBetween = 0;
+    let spaceAround = 0;
+
+    const justifyRemainingSpace = Math.max(0, contentWidth - actualTotalWidth);
+
+    switch (justifyContent) {
+      case "start":
+        startOffset = 0;
+        break;
+      case "center":
+        startOffset = justifyRemainingSpace / 2;
+        break;
+      case "end":
+        startOffset = justifyRemainingSpace;
+        break;
+      case "space-between":
+        spaceBetween =
+          children.length > 1
+            ? justifyRemainingSpace / (children.length - 1)
+            : 0;
+        break;
+      case "space-around":
+        spaceAround =
+          children.length > 0 ? justifyRemainingSpace / children.length : 0;
+        break;
+    }
+
+    // Position children with justifyContent and alignItems
+    let currentX =
+      containerBoxModel.padding.left +
+      containerBoxModel.border.left +
+      startOffset;
+
+    if (justifyContent === "space-around" && children.length > 0) {
+      currentX += spaceAround / 2;
+    }
+
+    children.forEach((child, index) => {
+      const childStyles = child._computedStyles || {};
+      const childBoxModel = this.getBoxModel(child);
+
+      // Account for child's margin
+      currentX += childBoxModel.margin.left;
+
+      // Position horizontally
+      child.x = container.x + currentX;
+
+      // Handle vertical alignment (cross-axis)
+      // Check for alignSelf which overrides the container's alignItems
+      const alignSelf = childStyles.alignSelf || alignment;
+
+      switch (alignSelf) {
+        case "center":
+          child.y =
+            container.y +
+            containerBoxModel.padding.top +
+            containerBoxModel.border.top +
+            (contentHeight -
+              (child.height +
+                childBoxModel.margin.top +
+                childBoxModel.margin.bottom)) /
+              2 +
+            childBoxModel.margin.top;
+          break;
+        case "end":
+          child.y =
+            container.y +
+            container.height -
+            containerBoxModel.padding.bottom -
+            containerBoxModel.border.bottom -
+            child.height -
+            childBoxModel.margin.bottom;
+          break;
+        default: // 'start'
+          child.y =
+            container.y +
+            containerBoxModel.padding.top +
+            containerBoxModel.border.top +
+            childBoxModel.margin.top;
+      }
+
+      // Move to next horizontal position
+      currentX += child.width + childBoxModel.margin.right;
+
+      // Add gap and spacing for next element
+      if (index < children.length - 1) {
+        currentX += gap + spaceBetween;
+        if (justifyContent === "space-around") {
+          currentX += spaceAround;
+        }
+      }
     });
   }
 }
 
-// Export for use in Construct 3
 export default UILayout;

@@ -62,7 +62,8 @@
 	},
 	"layouts": {
 		"items": [
-			"Layout 1"
+			"Layout 1",
+			"Layout 2"
 		],
 		"subfolders": []
 	},
@@ -222,7 +223,7 @@
 		"zAxisScale": "normalized",
 		"fov": 0.7853981633974483,
 		"useLoaderLayout": false,
-		"fullscreenMode": "scale-outer",
+		"fullscreenMode": "scale-inner",
 		"fullscreenQuality": "high",
 		"viewportFit": "auto",
 		"backgroundColor": [
@@ -263,7 +264,7 @@
 		"exportFileStructure": "folders",
 		"uidAllocationMode": "increment"
 	},
-	"viewportWidth": 854,
-	"viewportHeight": 480,
+	"viewportWidth": 1920,
+	"viewportHeight": 1080,
 	"firstLayout": null
 }
