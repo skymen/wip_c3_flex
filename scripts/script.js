@@ -4,6 +4,8 @@ const sceneOptions = {
   transformWidth: false, // Don't transform width
   transformHeight: false, // Don't transform height
   transformAngle: false,
+  transformOpacity: false,
+  transformVisibility: true,
   destroyWithParent: true,
 };
 
